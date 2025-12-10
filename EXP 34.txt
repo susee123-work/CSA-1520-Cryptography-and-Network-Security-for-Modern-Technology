@@ -1,0 +1,98 @@
+# Simple demonstration of ECB, CBC, and CFB modes
+# This is NOT real encryption — only to show how the modes work.
+
+BLOCK_SIZE = 8  # 8 bytes per block (like DES)
+
+def pad(data):
+    # 1-bit (0x80) + zero padding
+    data = data.encode()
+    pad_len = BLOCK_SIZE - (len(data) % BLOCK_SIZE)
+    return data + b'\x80' + b'\x00' * (pad_len - 1)
+
+def split_blocks(data):
+    return [data[i:i+BLOCK_SIZE] for i in range(0, len(data), BLOCK_SIZE)]
+
+def fake_encrypt(block):
+    # Fake encryption: XOR with 0xAA (just for demonstration)
+    return bytes([b ^ 0xAA for b in block])
+
+def fake_decrypt(block):
+    # Same operation reverses XOR
+    return bytes([b ^ 0xAA for b in block])
+
+# -------------------------- ECB --------------------------
+def ecb_encrypt(plaintext):
+    padded = pad(plaintext)
+    blocks = split_blocks(padded)
+    return b''.join(fake_encrypt(b) for b in blocks)
+
+def ecb_decrypt(ciphertext):
+    blocks = split_blocks(ciphertext)
+    pt = b''.join(fake_decrypt(b) for b in blocks)
+    return pt.rstrip(b'\x00').rstrip(b'\x80').decode()
+
+# -------------------------- CBC --------------------------
+def cbc_encrypt(plaintext, iv):
+    padded = pad(plaintext)
+    blocks = split_blocks(padded)
+    ciphertext = []
+    prev = iv
+    for block in blocks:
+        xored = bytes([a ^ b for a, b in zip(block, prev)])
+        enc = fake_encrypt(xored)
+        ciphertext.append(enc)
+        prev = enc
+    return b''.join(ciphertext)
+
+def cbc_decrypt(ciphertext, iv):
+    blocks = split_blocks(ciphertext)
+    plaintext = []
+    prev = iv
+    for block in blocks:
+        dec = fake_decrypt(block)
+        plain = bytes([a ^ b for a, b in zip(dec, prev)])
+        plaintext.append(plain)
+        prev = block
+    pt = b''.join(plaintext)
+    return pt.rstrip(b'\x00').rstrip(b'\x80').decode()
+
+# -------------------------- CFB --------------------------
+def cfb_encrypt(plaintext, iv):
+    data = plaintext.encode()
+    out = []
+    prev = iv
+    for b in data:
+        enc = fake_encrypt(prev)[0]  # take first byte
+        c = b ^ enc
+        out.append(c)
+        prev = bytes([c]) + prev[:-1]   # shift register
+    return bytes(out)
+
+def cfb_decrypt(ciphertext, iv):
+    out = []
+    prev = iv
+    for c in ciphertext:
+        enc = fake_encrypt(prev)[0]
+        b = c ^ enc
+        out.append(b)
+        prev = bytes([c]) + prev[:-1]
+    return bytes(out).decode()
+
+# -------------------------- RUN DEMO --------------------------
+plaintext = "HELLO WORLD"
+iv = b'\x01\x02\x03\x04\x05\x06\x07\x08'
+
+print("Original:", plaintext)
+
+ecb = ecb_encrypt(plaintext)
+print("\nECB ciphertext:", ecb)
+
+cbc = cbc_encrypt(plaintext, iv)
+print("CBC ciphertext:", cbc)
+
+cfb = cfb_encrypt(plaintext, iv)
+print("CFB ciphertext:", cfb)
+
+print("\nECB decrypted:", ecb_decrypt(ecb))
+print("CBC decrypted:", cbc_decrypt(cbc, iv))
+print("CFB decrypted:", cfb_decrypt(cfb, iv))

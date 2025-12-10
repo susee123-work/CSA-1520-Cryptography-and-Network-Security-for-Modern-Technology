@@ -1,0 +1,32 @@
+def XOR(a,b): return "".join("1" if x!=y else "0" for x,y in zip(a,b))
+def SDES(p,k): return XOR(p, k[:len(p)])  # toy S-DES
+
+IV="10101010"
+pt="0000000100100011"
+key="0111111101"
+
+# ENCRYPT
+prev=IV
+C=[]
+for i in range(0,len(pt),8):
+    blk=XOR(pt[i:i+8], prev)
+    ct=SDES(blk,key)
+    C.append(ct)
+    prev=ct
+
+# DECRYPT
+prev=IV
+D=[]
+for ct in C:
+    blk=SDES(ct,key)
+    ptb=XOR(blk,prev)
+    D.append(ptb)
+    prev=ct
+
+print("Cipher:", C)
+print("Plain :", D)
+
+OUTPUT
+
+Cipher: ['11010100', '10001000']
+Plain : ['00000001', '00100011']

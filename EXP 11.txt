@@ -1,0 +1,17 @@
+import math
+
+# (a) Total possible Playfair keys (ignoring duplicates)
+# 25 letters arranged in any order -> 25! permutations
+total_keys = math.factorial(25)
+
+# Convert to log2 for "approximate power of 2"
+power_of_2 = math.log2(total_keys)
+
+# (b) Effective unique keys
+# Playfair has equivalent keys due to row/column swaps, permutations etc.
+# Effective unique keys ≈ 25! / (5! * 5! * 4)
+unique_keys = total_keys / (math.factorial(5) * math.factorial(5) * 4)
+unique_power = math.log2(unique_keys)
+
+print("11(a). Total possible Playfair keys (approx as power of 2): 2^{:.2f}".format(power_of_2))
+print("11(b). Effective unique keys (approx as power of 2): 2^{:.2f}".format(unique_power))

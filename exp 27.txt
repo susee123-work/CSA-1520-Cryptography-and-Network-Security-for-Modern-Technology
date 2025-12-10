@@ -1,0 +1,35 @@
+# RSA per-letter encryption demo (insecure)
+# Letter -> number (A=0 ... Z=25)
+
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+# Example small RSA keys
+e = 7
+n = 143     # 11 * 13
+d = 103     # private key (not used by attacker)
+
+def encrypt_num(x):
+    return pow(x, e, n)
+
+def decrypt_num(x):
+    return pow(x, d, n)
+
+# Encrypt message letter-by-letter
+msg = "HELLO"
+cipher = [encrypt_num(alphabet.index(c)) for c in msg]
+
+print("Ciphertext blocks:", cipher)
+
+# ATTACK: Build codebook for all 26 letters
+lookup = {encrypt_num(i): alphabet[i] for i in range(26)}
+
+# Decrypt WITHOUT private key
+attack_plain = "".join(lookup[c] for c in cipher)
+
+print("Attacker recovers:", attack_plain)
+
+
+OUTPUT
+
+Ciphertext blocks: [104, 11, 5, 5, 60]
+Attacker recovers: HELLO

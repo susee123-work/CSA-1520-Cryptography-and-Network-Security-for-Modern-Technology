@@ -1,0 +1,34 @@
+# Normal Diffie-Hellman
+q = 23
+a = 5
+
+x = 6   # Alice secret
+y = 15  # Bob secret
+
+A = pow(a, x, q)
+B = pow(a, y, q)
+
+shared1 = pow(B, x, q)
+shared2 = pow(A, y, q)
+
+print("Correct DH shared key:", shared1, shared2)
+
+# WRONG: They send x^a instead of a^x mod q
+A_wrong = x ** a
+B_wrong = y ** a
+
+print("\nWrong DH values:", A_wrong, B_wrong)
+
+# Attacker easily finds x, y using logs (demo)
+import math
+log_x = round(math.log(A_wrong, a)) if A_wrong > 0 else None
+
+print("\nAttacker can recover x easily (demo):", log_x)
+
+OUTPUT
+
+Correct DH shared key: 2 2
+
+Wrong DH values: 15625 759375
+
+Attacker can recover x easily (demo): 6

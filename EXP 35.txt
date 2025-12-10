@@ -1,0 +1,51 @@
+import random
+import string
+
+# Convert A-Z to 0-25
+def char_to_num(c):
+    return ord(c) - ord('A')
+
+# Convert 0-25 to A-Z
+def num_to_char(n):
+    return chr(n + ord('A'))
+
+# Generate random key (same length as plaintext)
+def generate_key(length):
+    return [random.randint(0, 25) for _ in range(length)]
+
+# Encrypt using one-time pad Vigenère
+def encrypt(plaintext, key):
+    ciphertext = ""
+    for i, ch in enumerate(plaintext):
+        if ch.isalpha():
+            p = char_to_num(ch.upper())
+            c = (p + key[i]) % 26
+            ciphertext += num_to_char(c)
+        else:
+            ciphertext += ch
+    return ciphertext
+
+# Decrypt
+def decrypt(ciphertext, key):
+    plaintext = ""
+    for i, ch in enumerate(ciphertext):
+        if ch.isalpha():
+            c = char_to_num(ch.upper())
+            p = (c - key[i]) % 26
+            plaintext += num_to_char(p)
+        else:
+            plaintext += ch
+    return plaintext
+
+
+# ------------------- DEMO -------------------
+plaintext = "HELLO WORLD"
+
+key = generate_key(len(plaintext))
+cipher = encrypt(plaintext, key)
+plain_back = decrypt(cipher, key)
+
+print("Plaintext :", plaintext)
+print("Key       :", key)
+print("Ciphertext:", cipher)
+print("Decrypted :", plain_back)

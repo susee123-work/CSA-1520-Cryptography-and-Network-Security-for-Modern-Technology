@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+# hill_recover.py
+# Recover 2x2 Hill cipher key from 2 plaintext blocks (4 letters) and corresponding ciphertext (4 letters).
+# Pure Python, no numpy.
+
+from typing import Tuple
+
+MOD = 26
+
+def char_to_num(c: str) -> int:
+    return ord(c.upper()) - ord('A')
+
+def num_to_char(n: int) -> str:
+    return chr((n % MOD) + ord('A'))
+
+def egcd(a: int, b: int) -> Tuple[int,int,int]:
+    # extended gcd: returns (g, x, y) such that a*x + b*y = g
+    if b == 0:
+        return (a, 1, 0)
+    g, x1, y1 = egcd(b, a % b)
+    return (g, y1, x1 - (a // b) * y1)
+
+def modinv(a: int, m: int = MOD) -> int:
+    g, x, _ = egcd(a % m, m)
+    if g != 1:
+        return None
+    return x % m
+
+def matrix_det_2x2(mat):
+    return (mat[0][0]*mat[1][1] - mat[0][1]*mat[1][0])
+
+def matrix_adj_2x2(mat):
+    # adjugate for 2x2: [[d, -b], [-c, a]]
+    a, b = mat[0]
+    c, d = mat[1]
+    return [[d, -b], [-c, a]]
+
+def matrix_mod_mult(A, B):
+    # multiply 2x2 A by 2x2 B modulo MOD
+    return [
+        [ (A[0][0]*B[0][0] + A[0][1]*B[1][0]) % MOD, (A[0][0]*B[0][1] + A[0][1]*B[1][1]) % MOD ],
+        [ (A[1][0]*B[0][0] + A[1][1]*B[1][0]) % MOD, (A[1][0]*B[0][1] + A[1][1]*B[1][1]) % MOD ]
+    ]
+
+def matrix_inv_2x2_mod26(mat):
+    det = matrix_det_2x2(mat) % MOD
+    det_inv = modinv(det, MOD)
+    if det_inv is None:
+        return None  # not invertible
+    adj = matrix_adj_2x2(mat)
+    # multiply adj by det_inv and reduce mod 26
+    inv = [[ (det_inv * adj[i][j]) % MOD for j in range(2)] for i in range(2)]
+    return inv
+
+def build_matrix_from_4letters(s: str):
+    # map s[0], s[1] as first column, s[2], s[3] as second column
+    # common Hill layout: columns are successive plaintext blocks [p1 p2]
+    # We'll use matrix P = [[p0, p2], [p1, p3]] so that encryption C = K * P
+    if len(s) != 4:
+        raise ValueError("String must be exactly 4 letters.")
+    s = s.upper()
+    return [[char_to_num(s[0]), char_to_num(s[2])],
+            [char_to_num(s[1]), char_to_num(s[3])]]
+
+def recover_key_from_4letters(plain4: str, cipher4: str):
+    P = build_matrix_from_4letters(plain4)
+    C = build_matrix_from_4letters(cipher4)
+
+    P_inv = matrix_inv_2x2_mod26(P)
+    if P_inv is None:
+        raise ValueError("Plaintext matrix is not invertible modulo 26. Choose different plaintext pairs.")
+
+    # K = C * P_inv (mod 26)
+    K = matrix_mod_mult(C, P_inv)
+    return K
+
+def print_matrix(mat):
+    for row in mat:
+        print(" ".join(f"{x:2d}" for x in row))
+
+def main():
+    print("Recover 2x2 Hill Cipher Key from 4-letter plaintext & 4-letter ciphertext")
+    print("Plaintext and ciphertext must be exactly 4 letters (A-Z). Example: HELP -> QWER")
+    try:
+        pt = input("Enter 4-letter plaintext: ").strip()
+        ct = input("Enter 4-letter ciphertext: ").strip()
+        if len(pt) != 4 or len(ct) != 4 or not pt.isalpha() or not ct.isalpha():
+            print("ERROR: Both inputs must be exactly 4 alphabetic letters (A-Z).")
+            return
+
+        K = recover_key_from_4letters(pt, ct)
+        print("\nRecovered key matrix K (mod 26):")
+        print_matrix(K)
+        print("\nInterpretation: encryption is C = K * P   (mod 26)")
+        print("Matrix entries are in range 0..25 (A=0 ... Z=25).")
+
+    except ValueError as ve:
+        print("ERROR:", ve)
+    except Exception as e:
+        print("Unexpected error:", type(e).__name__, e)
+
+if __name__ == "__main__":
+    main()

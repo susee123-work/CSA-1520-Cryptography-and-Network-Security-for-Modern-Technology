@@ -1,0 +1,38 @@
+import random
+
+def score_text(text):
+    freq = {"th":3, "he":3, "in":2, "er":2, "an":2, "re":2}
+    s = 0
+    text = text.lower()
+    for bg in freq:
+        s += text.count(bg) * freq[bg]
+    return s
+
+def decrypt_sub(cipher, key):
+    table = {chr(97+i): key[i] for i in range(26)}
+    return "".join(table.get(ch, ch) for ch in cipher)
+
+def random_key():
+    letters = list("abcdefghijklmnopqrstuvwxyz")
+    random.shuffle(letters)
+    return letters
+
+def attack_sub(cipher, attempts=2000):
+    best_key = random_key()
+    best_score = score_text(decrypt_sub(cipher, best_key))
+
+    for _ in range(attempts):
+        key2 = best_key[:]
+        i, j = random.sample(range(26), 2)
+        key2[i], key2[j] = key2[j], key2[i]
+        score = score_text(decrypt_sub(cipher, key2))
+        if score > best_score:
+            best_score = score
+            best_key = key2
+    return best_key, decrypt_sub(cipher, best_key)
+
+
+cipher = input("Enter substitution cipher text: ")
+key, pt = attack_sub(cipher)
+print("Recovered plaintext:", pt)
+print("Recovered key:", "".join(key))

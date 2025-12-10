@@ -1,0 +1,55 @@
+import numpy as np
+
+def char_to_num(c):
+    return ord(c) - ord('a')
+
+def num_to_char(n):
+    return chr(n + ord('a'))
+
+def hill_encrypt(plaintext, key):
+    plaintext = plaintext.replace(" ", "").lower()
+    if len(plaintext) % 2 != 0:
+        plaintext += "x"
+
+    cipher = ""
+    for i in range(0, len(plaintext), 2):
+        pair = [char_to_num(plaintext[i]), char_to_num(plaintext[i+1])]
+        result = np.dot(key, pair) % 26
+        cipher += num_to_char(result[0]) + num_to_char(result[1])
+    return cipher
+
+
+def mod_inverse(a, m):
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    return None
+
+
+def hill_decrypt(ciphertext, key):
+    det = int(np.round(np.linalg.det(key))) % 26
+    det_inv = mod_inverse(det, 26)
+
+    adj = np.array([[key[1][1], -key[0][1]], 
+                    [-key[1][0], key[0][0]]])
+
+    inv_key = (det_inv * adj) % 26
+
+    plaintext = ""
+    for i in range(0, len(ciphertext), 2):
+        pair = [char_to_num(ciphertext[i]), char_to_num(ciphertext[i+1])]
+        result = np.dot(inv_key, pair) % 26
+        plaintext += num_to_char(result[0]) + num_to_char(result[1])
+    return plaintext
+
+
+# ----- MAIN -----
+key = np.array([[9, 4],
+                [5, 7]])
+
+pt = "meet me at the usual place at ten rather than eight oclock"
+cipher = hill_encrypt(pt, key)
+plain = hill_decrypt(cipher, key)
+
+print("Ciphertext:", cipher)
+print("Recovered plaintext:", plain)

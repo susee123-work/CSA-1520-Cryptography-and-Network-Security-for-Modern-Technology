@@ -1,0 +1,56 @@
+# Simple frequency attack on any monoalphabetic substitution cipher
+
+ENGLISH_ORDER = "ETAOINSHRDLCUMWFGYPBVKJXQZ"
+
+def frequency(cipher):
+    freq = {}
+    for c in cipher:
+        if c.isalpha():
+            freq[c] = freq.get(c, 0) + 1
+    return sorted(freq.items(), key=lambda x: x[1], reverse=True)
+
+def build_mapping(cipher, english_order):
+    cipher_freq = [pair[0] for pair in frequency(cipher)]
+    mapping = {}
+
+    # Map most frequent ciphertext letter -> most frequent English letter
+    for i in range(min(len(cipher_freq), len(english_order))):
+        mapping[cipher_freq[i]] = english_order[i]
+
+    return mapping
+
+def apply_mapping(cipher, mapping):
+    result = ""
+    for c in cipher:
+        if c.upper() in mapping:
+            new_c = mapping[c.upper()]
+            if c.islower():
+                result += new_c.lower()
+            else:
+                result += new_c
+        else:
+            result += c
+    return result
+
+def generate_candidate(cipher, shift):
+    eng = ENGLISH_ORDER[shift:] + ENGLISH_ORDER[:shift]
+    mapping = build_mapping(cipher, eng)
+    return apply_mapping(cipher, mapping)
+
+cipher = input("Enter ciphertext: ")
+N = int(input("How many top plaintexts? "))
+
+results = []
+
+for shift in range(26):   # try shifting English frequency order
+    pt = generate_candidate(cipher, shift)
+    score = sum(ENGLISH_ORDER.index(c.upper()) if c.upper() in ENGLISH_ORDER else 0 for c in pt)
+    results.append((score, pt))
+
+# Sort by likelihood
+results.sort(reverse=True)
+
+print("\nTOP", N, "PLAINTEXT GUESSES:")
+for i in range(min(N, len(results))):
+    score, pt = results[i]
+    print(f"[Rank {i+1}] Score={score:5d} → {pt}")

@@ -1,0 +1,20 @@
+def XOR(a,b): return "".join("1" if x!=y else "0" for x,y in zip(a,b))
+def SDES(x,k): return XOR(x,k[:len(x)])
+
+pt  = "000000010000001000000100"
+key = "0111111101"
+ctr = 0
+
+C=[]
+for i in range(0,len(pt),8):
+    counter=format(ctr,"08b")
+    ks=SDES(counter,key)
+    ct=XOR(ks,pt[i:i+8])
+    C.append(ct)
+    ctr+=1
+
+print("Cipher:", C)
+
+OUTPUT
+
+Cipher: ['01111110', '01111100', '01111001']

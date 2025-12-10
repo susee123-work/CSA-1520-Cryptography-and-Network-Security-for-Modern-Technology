@@ -1,0 +1,45 @@
+# Frequency attack on additive (Caesar) cipher
+# Finds top N most likely plaintexts based on English letter frequency
+
+ENGLISH_FREQ = {
+    'E': 12.0, 'T': 9.10, 'A': 8.12, 'O': 7.68, 'I': 7.31,
+    'N': 6.95, 'S': 6.28, 'R': 6.02, 'H': 5.92, 'D': 4.32,
+    'L': 3.98, 'U': 2.88, 'C': 2.71, 'M': 2.61, 'F': 2.30,
+    'Y': 2.11, 'W': 2.09, 'G': 2.03, 'P': 1.82, 'B': 1.49,
+    'V': 1.11, 'K': 0.69, 'X': 0.17, 'Q': 0.11, 'J': 0.10, 'Z': 0.07
+}
+
+def decrypt(cipher, key):
+    result = ""
+    for c in cipher.upper():
+        if c.isalpha():
+            result += chr((ord(c) - ord('A') - key) % 26 + ord('A'))
+        else:
+            result += c
+    return result
+
+def score(text):
+    # Higher score = more English-like
+    s = 0
+    for ch in text.upper():
+        if ch in ENGLISH_FREQ:
+            s += ENGLISH_FREQ[ch]
+    return s
+
+cipher = input("Enter ciphertext: ").upper()
+N = int(input("How many top plaintexts? "))
+
+results = []
+
+# Try all 26 keys
+for key in range(26):
+    pt = decrypt(cipher, key)
+    results.append((score(pt), key, pt))
+
+# Sort by highest score
+results.sort(reverse=True)
+
+print("\nTOP", N, "PLAINTEXT GUESSES:")
+for i in range(min(N, 26)):
+    sc, key, pt = results[i]
+    print(f"[Rank {i+1}] Key={key:2d}  Score={sc:6.2f}  →  {pt}")

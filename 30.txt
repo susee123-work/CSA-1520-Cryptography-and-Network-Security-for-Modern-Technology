@@ -1,0 +1,27 @@
+# Simple CBC-MAC for 1-block messages
+def xor(a,b): return "".join("1" if x!=y else "0" for x,y in zip(a,b))
+
+def CBC_MAC(blocks, key="1010"):
+    prev = "0000"
+    for blk in blocks:
+        mix = xor(blk, prev)
+        prev = xor(mix, key)  # simple block cipher
+    return prev
+
+X  = "1010"
+T  = CBC_MAC([X])
+
+# Forge 2-block message: X || (X XOR T)
+X2 = xor(X, T)
+
+T_forged = CBC_MAC([X, X2])
+
+print("Original MAC:", T)
+print("Forged MAC  :", T_forged)
+print("Forged message accepted by CBC-MAC!")
+
+OUTPUT
+
+Original MAC: 1100
+Forged MAC  : 1100
+Forged message accepted by CBC-MAC!

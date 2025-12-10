@@ -1,0 +1,27 @@
+import math
+
+# Suppose RSA modulus
+n = 3599     # example
+e = 31
+
+# attacker learns one plaintext block M has gcd(M, n) ≠ 1
+M = 59    # attacker knows this block
+
+# attacker computes factor
+g = math.gcd(M, n)
+
+print("Possible plaintext block =", M)
+print("gcd(M, n) =", g)
+
+if g != 1:
+    print("Recovered factor of n =", g)
+    print("Other factor =", n // g)
+else:
+    print("No factor recovered.")
+
+OUTPUT
+
+Possible plaintext block = 59
+gcd(M, n) = 59
+Recovered factor of n = 59
+Other factor = 61

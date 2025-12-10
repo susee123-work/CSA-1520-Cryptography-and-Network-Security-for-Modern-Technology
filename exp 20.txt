@@ -1,0 +1,54 @@
+# Simplest demonstration of ECB vs CBC error propagation
+# Using a dummy block cipher: ENC = block XOR key
+
+def xor(a, b):
+    return bytes([x ^ y for x, y in zip(a, b)])
+
+key = b'\x0f\x0f\x0f\x0f'   # 4-byte simple key
+IV  = b'\x01\x02\x03\x04'
+
+# Plaintext split into 4-byte blocks
+P1 = b'abcd'
+P2 = b'efgh'
+P3 = b'ijkl'
+
+print("Original P1,P2,P3:", P1, P2, P3)
+
+# ----- ECB Encryption -----
+C1_E = xor(P1, key)
+C2_E = xor(P2, key)
+C3_E = xor(P3, key)
+
+# Introduce an error in ciphertext block C2
+C2_E_corrupted = bytearray(C2_E)
+C2_E_corrupted[0] ^= 0x80   # flip 1 bit
+
+# ECB Decryption
+P1_d = xor(C1_E, key)
+P2_d = xor(C2_E_corrupted, key)  # ONLY THIS BLOCK WRONG
+P3_d = xor(C3_E, key)
+
+print("\nECB Decrypted:", P1_d, P2_d, P3_d)
+
+# ----- CBC Encryption -----
+C1 = xor(P1 ^ IV[0], key)
+C2 = xor((P2[0] ^ C1[0]).to_bytes(1,'big') + P2[1:], key)
+C3 = xor((P3[0] ^ C2[0]).to_bytes(1,'big') + P3[1:], key)
+
+# Introduce error in ciphertext block C1
+C1_corrupted = bytearray(C1)
+C1_corrupted[0] ^= 0x80   # flip 1 bit
+
+# CBC Decryption
+P1_c = xor(C1_corrupted, key)              # wrong
+P2_c = xor((P2[0] ^ C1_corrupted[0]).to_bytes(1,'big') + P2[1:], key)  # wrong
+P3_c = xor((P3[0] ^ C2[0]).to_bytes(1,'big') + P3[1:], key)            # correct
+
+print("\nCBC Decrypted:", P1_c, P2_c, P3_c)
+
+
+OUTPUT
+
+Original P1,P2,P3: b'abcd' b'efgh' b'ijkl'
+
+ECB Decrypted: b'abcd' b'\xe5fgh' b'ijkl'

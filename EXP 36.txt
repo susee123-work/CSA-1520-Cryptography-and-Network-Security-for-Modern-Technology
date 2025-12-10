@@ -1,0 +1,57 @@
+import math
+
+# Convert letters A-Z to numbers 0-25
+def char_to_num(c):
+    return ord(c) - ord('A')
+
+# Convert numbers 0-25 back to letters
+def num_to_char(n):
+    return chr(n + ord('A'))
+
+# Find modular inverse of a modulo 26
+def mod_inverse(a, m=26):
+    for x in range(26):
+        if (a * x) % m == 1:
+            return x
+    return None  # no inverse (invalid a)
+
+# Encrypt: C = (a*p + b) mod 26
+def encrypt(plaintext, a, b):
+    ciphertext = ""
+    for ch in plaintext:
+        if ch.isalpha():
+            p = char_to_num(ch.upper())
+            c = (a * p + b) % 26
+            ciphertext += num_to_char(c)
+        else:
+            ciphertext += ch
+    return ciphertext
+
+# Decrypt: P = a_inverse * (C - b) mod 26
+def decrypt(ciphertext, a, b):
+    plaintext = ""
+    a_inv = mod_inverse(a)
+    if a_inv is None:
+        return "ERROR: 'a' has no modular inverse. Cipher not one-to-one."
+
+    for ch in ciphertext:
+        if ch.isalpha():
+            c = char_to_num(ch.upper())
+            p = (a_inv * (c - b)) % 26
+            plaintext += num_to_char(p)
+        else:
+            plaintext += ch
+    return plaintext
+
+
+# ---------------- DEMO ----------------
+plaintext = "HELLO"
+a = 5   # must be coprime with 26 (5 works)
+b = 8
+
+cipher = encrypt(plaintext, a, b)
+plain_back = decrypt(cipher, a, b)
+
+print("Plaintext :", plaintext)
+print("Ciphertext:", cipher)
+print("Decrypted :", plain_back)

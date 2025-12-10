@@ -1,0 +1,31 @@
+# SHA-3 simplified fill-up demonstration
+# 1600-bit state = 25 lanes × 64 bits
+# Capacity lanes start zero, rate lanes absorb message
+
+lanes = [0] * 25        # all 25 lanes = 0
+rate_lanes = 16         # 1024 bits / 64 bits = 16 lanes
+capacity_lanes = 9      # remaining lanes = 9 lanes of capacity
+
+# Message block has nonzero bits in first 16 lanes
+message = [1] * 16      # fake non-zero data
+
+# Absorb block
+for i in range(rate_lanes):
+    lanes[i] ^= message[i]
+
+print("After first block absorption:")
+print("Capacity lanes still zero? →", lanes[16:] == [0]*capacity_lanes)
+
+# Now XOR message lanes again (simulate mixing)
+for i in range(capacity_lanes):
+    lanes[16+i] ^= 1  # message influences capacity indirectly
+
+print("After mixing:")
+print("Capacity lanes:", lanes[16:])
+
+OUTPUT
+
+After first block absorption:
+Capacity lanes still zero? → True
+After mixing:
+Capacity lanes: [1, 1, 1, 1, 1, 1, 1, 1, 1]

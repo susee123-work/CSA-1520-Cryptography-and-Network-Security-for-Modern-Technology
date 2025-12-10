@@ -1,0 +1,11 @@
+import math
+
+n=3599
+cipher_block=59   # attacker knows gcd != 1
+
+g=math.gcd(cipher_block, n)
+print("Recovered factor =", g)
+
+OUTPUT
+
+Recovered factor = 59

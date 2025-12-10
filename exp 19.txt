@@ -1,0 +1,27 @@
+from Crypto.Cipher import DES3
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad
+
+# plaintext
+plaintext = b"this is a secret message"
+
+# 3DES needs 24-byte (192-bit) key
+key = DES3.adjust_key_parity(get_random_bytes(24))
+
+# CBC mode needs a random 8-byte IV
+iv = get_random_bytes(8)
+
+cipher = DES3.new(key, DES3.MODE_CBC, iv)
+
+ciphertext = cipher.encrypt(pad(plaintext, 8))
+
+print("Key       :", key.hex())
+print("IV        :", iv.hex())
+print("Ciphertext:", ciphertext.hex())
+
+
+OUTPUT
+
+Key       : 04ecd68a0d37f2389db3f826c4c25d1976291a024aae5b62
+IV        : 85f79af83ee8a9ba
+Ciphertext: cdfa1aacd0958d0dce15532291499253d8aaef89d0232115e04336400c060db2
